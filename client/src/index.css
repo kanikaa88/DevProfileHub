@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+:root {
+  --color-bg-light: linear-gradient(135deg, #f9e7fe 0%, #ffe3e3 100%);
+  --color-bg-dark: linear-gradient(135deg, #232526 0%, #414345 100%);
+  --color-card-light: #fff;
+  --color-card-dark: #23272f;
+  --color-primary: #e1306c; /* Instagram pink */
+  --color-accent: #ff9800; /* Reddit orange */
+  --color-quora: #b92b27; /* Quora red */
+  --color-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  --color-border: #ececec;
+  --color-text-light: #222;
+  --color-text-dark: #f3f3f3;
+}
+
+body {
+  font-family: 'Poppins', 'Inter', 'Nunito', Arial, sans-serif;
+  background: var(--color-bg-light);
+  color: var(--color-text-light);
+  transition: background 0.5s, color 0.5s;
+}
+
+body.dark {
+  background: var(--color-bg-dark);
+  color: var(--color-text-dark);
+}
+
+.card {
+  background: var(--color-card-light);
+  border-radius: 1.5rem;
+  box-shadow: var(--color-shadow);
+  border: 1px solid var(--color-border);
+  transition: background 0.5s, color 0.5s, box-shadow 0.3s;
+}
+body.dark .card {
+  background: var(--color-card-dark);
+  color: var(--color-text-dark);
+  border: 1px solid #333;
+}
+
+.btn-gradient {
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px 0 rgba(31, 38, 135, 0.10);
+  transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
+  cursor: pointer;
+}
+.btn-gradient:hover {
+  box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.18);
+  transform: translateY(-2px) scale(1.03);
+}
+
+input, textarea, select {
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-border);
+  padding: 0.75rem 1rem;
+  font-family: inherit;
+  font-size: 1rem;
+  background: #fafafa;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+body.dark input, body.dark textarea, body.dark select {
+  background: #23272f;
+  color: var(--color-text-dark);
+  border: 1px solid #444;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary)22;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: #eee;
+}
+::-webkit-scrollbar-thumb {
+  background: #e0b3ff;
+  border-radius: 8px;
+}
+body.dark ::-webkit-scrollbar-thumb {
+  background: #444;
+}
+
+/* Glassmorphism for cards */
+.glass {
+  background: rgba(255,255,255,0.7);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+  backdrop-filter: blur(8px);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255,255,255,0.18);
+}
+body.dark .glass {
+  background: rgba(35,39,47,0.7);
+  border: 1px solid rgba(60,60,60,0.18);
+}
