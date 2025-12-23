@@ -1,15 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense, lazy } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { auth } from "./firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import Login from "./login";
-import PlatformForm from "./PlatformForm";
-import Dashboard from "./Dashboard";
-import VerificationPrompt from "./VerificationPrompt";
-import EditProfile from "./EditProfile";
-import AddStats from "./AddStats";
 import { FaMoon, FaSun } from "react-icons/fa";
+import ErrorBoundary from "./ErrorBoundary";
 
-function App() {
+// Lazy load components for better performance
+const Login = lazy(() => import("./login"));
+const PlatformForm = lazy(() => import("./PlatformForm"));
+const Dashboard = lazy(() => import("./Dashboard"));
+const VerificationPrompt = lazy(() => import("./VerificationPrompt"));
+const MobileVerificationPrompt = lazy(() => import("./MobileVerificationPrompt"));
+const EditProfile = lazy(() => import("./EditProfile"));
+const AddStats = lazy(() => import("./AddStats"));
+const PublicProfile = lazy(() => import("./PublicProfile"));
+
+function AppContent() {
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [profileData, setProfileData] = useState(null);
@@ -19,6 +26,8 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
+  const [showMobileVerificationPrompt, setShowMobileVerificationPrompt] = useState(false);
+  const [verificationType, setVerificationType] = useState('email'); // 'email' or 'mobile'
   const [isEditing, setIsEditing] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showAddStats, setShowAddStats] = useState(false);
@@ -181,6 +190,7 @@ function App() {
         setIsVerified(true);
         setProfileData(result.data);
         setShowVerificationPrompt(false);
+        setShowMobileVerificationPrompt(false);
       } else {
         throw new Error('Failed to verify email');
       }
@@ -192,12 +202,49 @@ function App() {
     }
   };
 
+  const handleMobileVerification = async () => {
+    if (!user || !profileData) return;
+    
+    try {
+      setLoading(true);
+      // For now, just mark as verified since we don't have SMS service
+      setIsVerified(true);
+      setShowMobileVerificationPrompt(false);
+      setShowVerificationPrompt(false);
+    } catch (err) {
+      console.error("Mobile verification error:", err);
+      setError("Failed to verify mobile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerificationClick = (type) => {
+    setVerificationType(type);
+    if (type === 'email') {
+      setShowVerificationPrompt(true);
+    } else if (type === 'mobile') {
+      setShowMobileVerificationPrompt(true);
+    }
+  };
+
   // Show OTP screen only when user clicks "Verify"
   if (showVerificationPrompt && profileData?.email) {
     return (
       <VerificationPrompt
         email={profileData.email}
         onVerified={handleEmailVerification}
+        onBack={() => setShowVerificationPrompt(false)}
+      />
+    );
+  }
+
+  if (showMobileVerificationPrompt && profileData?.contact) {
+    return (
+      <MobileVerificationPrompt
+        mobile={profileData.contact}
+        onVerified={handleMobileVerification}
+        onBack={() => setShowMobileVerificationPrompt(false)}
       />
     );
   }
@@ -213,18 +260,36 @@ function App() {
     );
   }
 
-  if (!user) return <Login />;
+  if (!user) return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    </div>}>
+      <Login />
+    </Suspense>
+  );
 
   if (!profileData || isEditing) {
     return (
-      <PlatformForm 
-        onSubmit={handleFormSubmit} 
-        onVerifyClick={() => setShowVerificationPrompt(true)}
-        loading={loading}
-        error={error}
-        initialData={isEditing ? profileData : (user ? { email: user.email } : null)}
-        isEditing={isEditing}
-      />
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading form...</p>
+        </div>
+      </div>}>
+        <PlatformForm 
+          onSubmit={handleFormSubmit} 
+          onVerifyClick={() => handleVerificationClick('email')}
+          onMobileVerifyClick={() => handleVerificationClick('mobile')}
+          onBack={() => setIsEditing(false)}
+          loading={loading}
+          error={error}
+          initialData={isEditing ? profileData : (user ? { email: user.email } : null)}
+          isEditing={isEditing}
+        />
+      </Suspense>
     );
   }
 
@@ -234,6 +299,8 @@ function App() {
         profileData={profileData}
         onSave={handleEditProfile}
         onCancel={() => setShowEditProfile(false)}
+        onBack={() => setShowEditProfile(false)}
+        onMobileVerifyClick={handleVerificationClick}
       />
     );
   }
@@ -244,6 +311,7 @@ function App() {
         profileData={profileData}
         onSave={handleAddStats}
         onCancel={() => setShowAddStats(false)}
+        onBack={() => setShowAddStats(false)}
       />
     );
   }
@@ -333,6 +401,19 @@ function App() {
                   <button 
                     className="block w-full text-left px-4 py-2 hover:opacity-80 transition-opacity"
                     style={{color: darkMode ? 'var(--color-text-dark)' : '#374151'}}
+                    onClick={() => {
+                      const profileUrl = `${window.location.origin}/profile/${profileData.username}`;
+                      navigator.clipboard.writeText(profileUrl).then(() => {
+                        alert("Profile link copied to clipboard!");
+                      });
+                      setMenuOpen(false);
+                    }}
+                  >
+                    📋 Share Profile
+                  </button>
+                  <button 
+                    className="block w-full text-left px-4 py-2 hover:opacity-80 transition-opacity"
+                    style={{color: darkMode ? 'var(--color-text-dark)' : '#374151'}}
                     onClick={handleSignOut}
                   >
                     Sign Out
@@ -364,6 +445,19 @@ function App() {
         <Dashboard profileData={profileData} darkMode={darkMode} />
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <Router>
+        <Routes>
+          <Route path="/profile/:username" element={<PublicProfile />} />
+          <Route path="*" element={<AppContent />} />
+        </Routes>
+      </Router>
+    </ErrorBoundary>
   );
 }
 

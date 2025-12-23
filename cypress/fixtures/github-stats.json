@@ -1,0 +1,19 @@
+{
+  "username": "johndoe",
+  "name": "John Doe",
+  "publicRepos": 25,
+  "followers": 10,
+  "following": 5,
+  "profileUrl": "https://github.com/johndoe",
+  "avatarUrl": "https://avatars.githubusercontent.com/u/123456?v=4",
+  "bio": "Full-stack developer passionate about React and Node.js",
+  "location": "San Francisco, CA",
+  "contributionData": {
+    "2024-01-01": 5,
+    "2024-01-02": 3,
+    "2024-01-03": 0,
+    "2024-01-04": 8,
+    "2024-01-05": 2
+  },
+  "totalContributions": 18
+}

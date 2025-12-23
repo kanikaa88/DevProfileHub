@@ -1,0 +1,20 @@
+{
+  "username": "johndoe",
+  "totalSolved": 150,
+  "easySolved": 80,
+  "mediumSolved": 60,
+  "hardSolved": 10,
+  "ranking": 5000,
+  "avatar": "https://assets.leetcode.com/users/johndoe/avatar.png",
+  "realName": "John Doe",
+  "aboutMe": "Passionate about algorithms and data structures",
+  "location": "San Francisco, CA",
+  "submissionData": {
+    "1640995200": 2,
+    "1641081600": 1,
+    "1641168000": 0,
+    "1641254400": 3,
+    "1641340800": 1
+  },
+  "totalSubmissions": 7
+}

@@ -1,0 +1,30 @@
+{
+  "success": true,
+  "data": {
+    "firebaseUid": "test-uid",
+    "email": "test@example.com",
+    "username": "johndoe",
+    "firstName": "John",
+    "lastName": "Doe",
+    "contact": "1234567890",
+    "address": "123 Main St",
+    "linkedin": "https://linkedin.com/in/johndoe",
+    "github": "johndoe",
+    "leetcode": "johndoe",
+    "projects": [
+      {
+        "title": "Test Project",
+        "description": "A test project",
+        "tags": ["React", "Node.js"],
+        "points": ["Feature 1", "Feature 2"],
+        "links": {
+          "github": "https://github.com/johndoe/test",
+          "live": "https://test.com"
+        }
+      }
+    ],
+    "emailVerified": true,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  }
+}

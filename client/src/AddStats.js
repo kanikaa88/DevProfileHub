@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function AddStats({ profileData, onSave, onCancel }) {
+function AddStats({ profileData, onSave, onCancel, onBack }) {
   const [formData, setFormData] = useState({
     github: profileData?.github || "",
     leetcode: profileData?.leetcode || "",
@@ -44,7 +44,18 @@ function AddStats({ profileData, onSave, onCancel }) {
         {/* Header */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-purple-700">Add More Stats</h1>
+            <div className="flex items-center gap-4">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  <span className="text-xl">←</span>
+                  <span>Back</span>
+                </button>
+              )}
+              <h1 className="text-3xl font-bold text-purple-700">Add More Stats</h1>
+            </div>
             <button
               onClick={onCancel}
               className="text-gray-500 hover:text-gray-700 text-lg"

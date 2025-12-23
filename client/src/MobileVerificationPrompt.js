@@ -1,7 +1,7 @@
-// VerificationPrompt.js
+// MobileVerificationPrompt.js
 import React, { useState, useEffect, useCallback } from "react";
 
-function VerificationPrompt({ email, onVerified, onBack }) {
+function MobileVerificationPrompt({ mobile, onVerified, onBack }) {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [sendingOtp, setSendingOtp] = useState(false);
@@ -13,21 +13,21 @@ function VerificationPrompt({ email, onVerified, onBack }) {
       setSendingOtp(true);
       setMessage("");
       
-      const response = await fetch("http://localhost:8080/api/otp/send", {
+      const response = await fetch("http://localhost:8080/api/otp/send-mobile", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ mobile }),
       });
 
       const data = await response.json();
       
       if (response.ok) {
-        setMessage("OTP sent to your email!");
+        setMessage("OTP sent to your mobile number!");
         setOtpSent(true);
-        // Mark that we've sent an OTP for this email in this session
-        sessionStorage.setItem(`otp_sent_${email}`, 'true');
+        // Mark that we've sent an OTP for this mobile in this session
+        sessionStorage.setItem(`mobile_otp_sent_${mobile}`, 'true');
       } else {
         setMessage(data.message || "Failed to send OTP");
       }
@@ -36,19 +36,19 @@ function VerificationPrompt({ email, onVerified, onBack }) {
     } finally {
       setSendingOtp(false);
     }
-  }, [email]);
+  }, [mobile]);
 
   // Send OTP when component mounts, but only if not already sent in this session
   useEffect(() => {
     // Check if we already sent an OTP in this session
-    const sessionOtpSent = sessionStorage.getItem(`otp_sent_${email}`);
+    const sessionOtpSent = sessionStorage.getItem(`mobile_otp_sent_${mobile}`);
     if (!sessionOtpSent) {
       sendOTP();
     } else {
       setOtpSent(true);
-      setMessage("OTP already sent to your email!");
+      setMessage("OTP already sent to your mobile number!");
     }
-  }, [email, sendOTP]);
+  }, [mobile, sendOTP]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,20 +62,20 @@ function VerificationPrompt({ email, onVerified, onBack }) {
       setLoading(true);
       setMessage("");
       
-      const response = await fetch("http://localhost:8080/api/otp/verify", {
+      const response = await fetch("http://localhost:8080/api/otp/verify-mobile", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, code: otp.trim() }),
+        body: JSON.stringify({ mobile, code: otp.trim() }),
       });
 
       const data = await response.json();
       
       if (response.ok) {
-        setMessage("Email verified successfully!");
+        setMessage("Mobile number verified successfully!");
         // Clear the session storage when verification is successful
-        sessionStorage.removeItem(`otp_sent_${email}`);
+        sessionStorage.removeItem(`mobile_otp_sent_${mobile}`);
         setTimeout(() => {
           onVerified();
         }, 1000);
@@ -101,14 +101,14 @@ function VerificationPrompt({ email, onVerified, onBack }) {
             <span className="text-xl">←</span>
             <span>Back</span>
           </button>
-          <div className="text-4xl">📧</div>
+          <div className="text-4xl">📱</div>
         </div>
 
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-purple-700 mb-2">Verify Your Email</h1>
+          <h1 className="text-2xl font-bold text-purple-700 mb-2">Verify Your Mobile</h1>
           <p className="text-gray-600">
             {sendingOtp ? "Sending verification code..." : 
-             otpSent ? `We've sent a verification code to ${email}` :
+             otpSent ? `We've sent a verification code to ${mobile}` :
              "Preparing to send verification code..."}
           </p>
         </div>
@@ -141,7 +141,7 @@ function VerificationPrompt({ email, onVerified, onBack }) {
             disabled={loading}
             className="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Verifying..." : "Verify Email"}
+            {loading ? "Verifying..." : "Verify Mobile"}
           </button>
         </form>
 
@@ -162,4 +162,4 @@ function VerificationPrompt({ email, onVerified, onBack }) {
   );
 }
 
-export default VerificationPrompt;
+export default MobileVerificationPrompt;

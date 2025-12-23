@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function PlatformForm({ onSubmit, onVerifyClick, initialData = null, isEditing = false }) {
+function PlatformForm({ onSubmit, onVerifyClick, onMobileVerifyClick, onBack, initialData = null, isEditing = false }) {
   const [formData, setFormData] = useState({
     firstName: initialData?.firstName || "",
     lastName: initialData?.lastName || "",
@@ -379,9 +379,20 @@ function PlatformForm({ onSubmit, onVerifyClick, initialData = null, isEditing =
         {/* Progress Bar */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-purple-700">
-              {isEditing ? "Edit Your Profile" : "Complete Your Profile"}
-            </h1>
+            <div className="flex items-center gap-4">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  <span className="text-xl">←</span>
+                  <span>Back</span>
+                </button>
+              )}
+              <h1 className="text-2xl font-bold text-purple-700">
+                {isEditing ? "Edit Your Profile" : "Complete Your Profile"}
+              </h1>
+            </div>
             <span className="text-sm text-gray-500">Step {currentStep} of 3</span>
           </div>
           
@@ -426,6 +437,16 @@ function PlatformForm({ onSubmit, onVerifyClick, initialData = null, isEditing =
                   className="px-6 py-3 text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-all"
                 >
                   Verify Email
+                </button>
+              )}
+
+              {formData.contact && (
+                <button
+                  type="button"
+                  onClick={() => onMobileVerifyClick()}
+                  className="px-6 py-3 text-green-600 border border-green-300 rounded-lg hover:bg-green-50 transition-all"
+                >
+                  Verify Mobile
                 </button>
               )}
 

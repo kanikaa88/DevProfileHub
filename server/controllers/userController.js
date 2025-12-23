@@ -246,14 +246,128 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+// Get user profile by username (public access)
+const getUserProfileByUsername = async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    if (!username) {
+      return res.status(400).json({ message: "Username is required" });
+    }
+
+    const user = await User.findOne({ username: username.toLowerCase() }).select("-__v -firebaseUid");
+
+    if (!user) {
+      return res.status(404).json({ message: "Profile not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (err) {
+    console.error("Error in getUserProfileByUsername:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Upload resume
+const uploadResume = async (req, res) => {
+  try {
+    const { firebaseUid } = req.params;
+    
+    if (!firebaseUid) {
+      return res.status(400).json({ message: "Firebase UID is required" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const resumeUrl = `/api/users/uploads/${req.file.filename}`;
+
+    const user = await User.findOneAndUpdate(
+      { firebaseUid },
+      { resumeUrl, updatedAt: Date.now() },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Resume uploaded successfully",
+      resumeUrl: resumeUrl
+    });
+  } catch (err) {
+    console.error("Error uploading resume:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Update projects
+const updateProjects = async (req, res) => {
+  try {
+    const { firebaseUid } = req.params;
+    const { projects } = req.body;
+
+    if (!firebaseUid) {
+      return res.status(400).json({ message: "Firebase UID is required" });
+    }
+
+    const user = await User.findOneAndUpdate(
+      { firebaseUid },
+      { projects, updatedAt: Date.now() },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Projects updated successfully",
+      data: user
+    });
+  } catch (err) {
+    console.error("Error updating projects:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Serve uploaded files
+const serveFile = async (req, res) => {
+  try {
+    const { filename } = req.params;
+    const path = require('path');
+    const filePath = path.join(__dirname, '../uploads', filename);
+    
+    res.download(filePath, (err) => {
+      if (err) {
+        res.status(404).json({ message: "File not found" });
+      }
+    });
+  } catch (err) {
+    console.error("Error serving file:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   getUserProfile,
+  getUserProfileByUsername,
   createOrUpdateProfile,
   updateProfileLinks,
   verifyEmail,
   deleteProfile,
   getAllUsers,
-  checkUsernameAvailability
+  checkUsernameAvailability,
+  uploadResume,
+  updateProjects,
+  serveFile
 };
 
 

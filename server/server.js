@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
+require("./sentry");
 
 const app = express();
 const PORT = 8080;
@@ -11,8 +12,13 @@ const userRoutes = require("./routes/users");
 const otpRoutes = require("./routes/otp"); // ✅ Added OTP route
 
 // 🔹 Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  credentials: true
+}));
 app.use(express.json());
+// Serve uploaded files statically
+app.use("/api/users/uploads", express.static(require("path").join(__dirname, "uploads")));
 
 // 🔹 Routes
 app.use("/api/users", userRoutes);

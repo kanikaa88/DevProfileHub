@@ -52,6 +52,34 @@ const userSchema = new mongoose.Schema({
   codeforces: String,
   hackerrank: String,
   
+  // Resume and projects
+  resumeUrl: String,
+  projects: [{
+    title: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    tags: [{
+      type: String,
+    }],
+    points: [{
+      type: String,
+    }],
+    links: {
+      github: String,
+      live: String,
+      demo: String,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+  }],
+  
   // Additional fields
   bio: String,
   portfolioLink: String,

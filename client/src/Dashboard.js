@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo, useMemo, useCallback } from "react";
 import { FaGithub, FaTrophy, FaHackerrank, FaLinkedin } from "react-icons/fa";
 import { SiLeetcode } from "react-icons/si";
+import HeatmapComponent from "./HeatmapComponent";
 
 // Inline SVG components for logos
 const LeetCodeLogo = () => (
@@ -24,7 +25,7 @@ const LinkedInLogo = () => (
   </svg>
 );
 
-function Dashboard({ profileData, onEditProfile, darkMode }) {
+const Dashboard = memo(function Dashboard({ profileData, onEditProfile, darkMode }) {
   const [githubData, setGithubData] = useState(null);
   const [leetcodeData, setLeetcodeData] = useState(null);
   const [codeforcesData, setCodeforcesData] = useState(null);
@@ -83,16 +84,22 @@ function Dashboard({ profileData, onEditProfile, darkMode }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (localProfileData.github) {
+      console.log("Fetching stats for profile:", localProfileData);
+      if (localProfileData?.github) {
         setLoading(prev => ({ ...prev, github: true }));
+        setErrors(prev => ({ ...prev, github: null }));
         try {
-          const response = await fetch(`http://localhost:8080/api/users/stats/github?username=${localProfileData.github}`);
-          if (!response.ok) throw new Error('Failed to fetch GitHub data');
+          const response = await fetch(`http://localhost:8080/api/users/stats/github?username=${encodeURIComponent(localProfileData.github)}`);
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+            throw new Error(errorData.message || `HTTP ${response.status}: Failed to fetch GitHub data`);
+          }
           const data = await response.json();
           setGithubData(data);
+          setErrors(prev => ({ ...prev, github: null }));
         } catch (err) {
           console.error("GitHub error:", err);
-          setErrors(prev => ({ ...prev, github: "Failed to load GitHub data" }));
+          setErrors(prev => ({ ...prev, github: err.message || "Failed to load GitHub data" }));
         } finally {
           setLoading(prev => ({ ...prev, github: false }));
         }
@@ -113,31 +120,41 @@ function Dashboard({ profileData, onEditProfile, darkMode }) {
         }
       }
 
-      if (localProfileData.codeforces) {
+      if (localProfileData?.codeforces) {
         setLoading(prev => ({ ...prev, codeforces: true }));
+        setErrors(prev => ({ ...prev, codeforces: null }));
         try {
-          const response = await fetch(`http://localhost:8080/api/users/stats/codeforces?username=${localProfileData.codeforces}`);
-          if (!response.ok) throw new Error('Failed to fetch Codeforces data');
+          const response = await fetch(`http://localhost:8080/api/users/stats/codeforces?username=${encodeURIComponent(localProfileData.codeforces)}`);
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+            throw new Error(errorData.message || `HTTP ${response.status}: Failed to fetch Codeforces data`);
+          }
           const data = await response.json();
           setCodeforcesData(data);
+          setErrors(prev => ({ ...prev, codeforces: null }));
         } catch (err) {
           console.error("Codeforces error:", err);
-          setErrors(prev => ({ ...prev, codeforces: "Failed to load Codeforces data" }));
+          setErrors(prev => ({ ...prev, codeforces: err.message || "Failed to load Codeforces data" }));
         } finally {
           setLoading(prev => ({ ...prev, codeforces: false }));
         }
       }
 
-      if (localProfileData.hackerrank) {
+      if (localProfileData?.hackerrank) {
         setLoading(prev => ({ ...prev, hackerrank: true }));
+        setErrors(prev => ({ ...prev, hackerrank: null }));
         try {
-          const response = await fetch(`http://localhost:8080/api/users/stats/hackerrank?username=${localProfileData.hackerrank}`);
-          if (!response.ok) throw new Error('Failed to fetch HackerRank data');
+          const response = await fetch(`http://localhost:8080/api/users/stats/hackerrank?username=${encodeURIComponent(localProfileData.hackerrank)}`);
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+            throw new Error(errorData.message || `HTTP ${response.status}: Failed to fetch HackerRank data`);
+          }
           const data = await response.json();
           setHackerrankData(data);
+          setErrors(prev => ({ ...prev, hackerrank: null }));
         } catch (err) {
           console.error("HackerRank error:", err);
-          setErrors(prev => ({ ...prev, hackerrank: "Failed to load HackerRank data" }));
+          setErrors(prev => ({ ...prev, hackerrank: err.message || "Failed to load HackerRank data" }));
         } finally {
           setLoading(prev => ({ ...prev, hackerrank: false }));
         }
@@ -209,9 +226,9 @@ function Dashboard({ profileData, onEditProfile, darkMode }) {
   };
 
   // Helper to get LinkedIn profile pic (fallback to logo)
-  const getLinkedInAvatar = () => {
-    return <LinkedInLogo />;
-  };
+  // const getLinkedInAvatar = () => {
+  //   return <LinkedInLogo />;
+  // };
 
   // Helper to get LeetCode avatar (use real avatar if available, otherwise fallback)
   const getLeetCodeAvatar = () => {
@@ -298,6 +315,74 @@ function Dashboard({ profileData, onEditProfile, darkMode }) {
         </div>
       </div>
 
+      {/* Resume and Projects Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Resume */}
+        <div className="card p-6 rounded-xl shadow-lg border-l-4 border-green-500">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+              <span className="text-green-600 text-xl">📄</span>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold transition-colors duration-300" style={{color: darkMode ? 'var(--color-text-dark)' : '#1f2937'}}>Resume</h2>
+              <p className="transition-colors duration-300" style={{color: darkMode ? '#9ca3af' : '#6b7280'}}>Your professional resume</p>
+            </div>
+          </div>
+          {localProfileData?.resumeUrl ? (
+            <a 
+              href={`http://localhost:8080${localProfileData.resumeUrl}`}
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              Download Resume
+            </a>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm transition-colors duration-300" style={{color: darkMode ? '#9ca3af' : '#6b7280'}}>Upload your resume to share it with recruiters</p>
+            </div>
+          )}
+        </div>
+
+        {/* Projects Summary */}
+        <div className="card p-6 rounded-xl shadow-lg border-l-4 border-purple-500">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <span className="text-purple-600 text-xl">🚀</span>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold transition-colors duration-300" style={{color: darkMode ? 'var(--color-text-dark)' : '#1f2937'}}>Projects</h2>
+              <p className="transition-colors duration-300" style={{color: darkMode ? '#9ca3af' : '#6b7280'}}>
+                {localProfileData?.projects?.length || 0} project{localProfileData?.projects?.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+          </div>
+          {localProfileData?.projects && localProfileData.projects.length > 0 ? (
+            <div className="space-y-2">
+              {localProfileData.projects.slice(0, 3).map((project, index) => (
+                <div key={index} className="text-sm">
+                  <p className="font-medium transition-colors duration-300" style={{color: darkMode ? 'var(--color-text-dark)' : '#1f2937'}}>
+                    {project.title}
+                  </p>
+                  <p className="transition-colors duration-300" style={{color: darkMode ? '#9ca3af' : '#6b7280'}}>
+                    {project.description?.substring(0, 60)}...
+                  </p>
+                </div>
+              ))}
+              {localProfileData.projects.length > 3 && (
+                <p className="text-sm transition-colors duration-300" style={{color: darkMode ? '#9ca3af' : '#6b7280'}}>
+                  +{localProfileData.projects.length - 3} more projects
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm transition-colors duration-300" style={{color: darkMode ? '#9ca3af' : '#6b7280'}}>Add your projects to showcase your work</p>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* GitHub */}
@@ -338,6 +423,31 @@ function Dashboard({ profileData, onEditProfile, darkMode }) {
             {githubData?.bio && (
               <p className="text-sm italic line-clamp-2 transition-colors duration-300" style={{color: darkMode ? '#9ca3af' : '#6b7280'}}>"{githubData.bio}"</p>
             )}
+            
+            {/* GitHub Heatmap */}
+            {githubData?.contributionData ? (
+              <div className="mt-4 pt-4 border-t" style={{borderColor: darkMode ? '#374151' : '#e5e7eb'}}>
+                <HeatmapComponent
+                  type="github"
+                  data={githubData.contributionData}
+                  username={githubData.username}
+                  totalContributions={githubData.totalContributions}
+                />
+              </div>
+            ) : (
+              <div className="mt-4 pt-4 border-t text-center" style={{borderColor: darkMode ? '#374151' : '#e5e7eb'}}>
+                <p className="text-sm" style={{color: darkMode ? '#9ca3af' : '#6b7280'}}>
+                  No contribution data found. Please check:
+                </p>
+                <ul className="text-xs mt-2" style={{color: darkMode ? '#9ca3af' : '#6b7280'}}>
+                  <li>• GitHub username is correct</li>
+                  <li>• Profile is public</li>
+                  <li>• You have recent activity</li>
+                </ul>
+              </div>
+            )}
+            
+            
           </div>
         </StatCard>
         {/* LeetCode */}
@@ -385,6 +495,18 @@ function Dashboard({ profileData, onEditProfile, darkMode }) {
                 <span className="text-red-600 font-medium">{leetcodeData?.hardSolved || 0}</span>
               </div>
             </div>
+            
+            {/* LeetCode Heatmap */}
+            {leetcodeData?.submissionData && (
+              <div className="mt-4 pt-4 border-t" style={{borderColor: darkMode ? '#374151' : '#e5e7eb'}}>
+                <HeatmapComponent
+                  type="leetcode"
+                  data={leetcodeData.submissionData}
+                  username={leetcodeData.username}
+                  totalSubmissions={leetcodeData.totalSubmissions}
+                />
+              </div>
+            )}
           </div>
         </StatCard>
         {/* Codeforces */}
@@ -465,6 +587,8 @@ function Dashboard({ profileData, onEditProfile, darkMode }) {
           </div>
         </StatCard>
       </div>
+
+
       {/* Empty State */}
       {!loading.github && !loading.leetcode && !loading.codeforces && !loading.hackerrank &&
        !githubData && !leetcodeData && !codeforcesData && !hackerrankData && (
@@ -485,6 +609,6 @@ function Dashboard({ profileData, onEditProfile, darkMode }) {
       )}
     </div>
   );
-}
+});
 
 export default Dashboard;
